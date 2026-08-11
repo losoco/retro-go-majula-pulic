@@ -32,6 +32,8 @@
 #include "targets/esp32-p4/config.h"
 #elif defined(RG_TARGET_P4_GAME)
 #include "targets/p4-game/config.h"
+#elif defined(RG_TARGET_MAJULA)
+#include "targets/majula/config.h"
 
 #else
 #warning "No target defined. Defaulting to ODROID-GO."

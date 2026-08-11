@@ -15,7 +15,7 @@
 #include <SDL2/SDL.h>
 #endif
 
-#if defined(RG_TARGET_P4_GAME) && RG_BATTERY_DRIVER == 1
+#if (defined(RG_TARGET_P4_GAME) || defined(RG_TARGET_MAJULA)) && RG_BATTERY_DRIVER == 1
 #include "esp_err.h"
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
@@ -23,7 +23,7 @@
 static adc_oneshot_unit_handle_t battery_adc_handle = NULL;
 static adc_cali_handle_t battery_adc_cali_handle = NULL;
 static bool battery_adc_calibrated = false;
-#elif RG_BATTERY_DRIVER == 1 && !defined(RG_TARGET_P4_GAME)
+#elif RG_BATTERY_DRIVER == 1 && !(defined(RG_TARGET_P4_GAME) || defined(RG_TARGET_MAJULA))
 #include <esp_adc_cal.h>
 static esp_adc_cal_characteristics_t adc_chars;
 #endif
@@ -74,7 +74,7 @@ static inline int adc_get_raw(adc_unit_t unit, adc_channel_t channel)
 }
 #endif
 
-#if defined(RG_TARGET_P4_GAME) && RG_BATTERY_DRIVER == 1
+#if (defined(RG_TARGET_P4_GAME) || defined(RG_TARGET_MAJULA)) && RG_BATTERY_DRIVER == 1
 static bool battery_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle)
 {
     adc_cali_handle_t handle = NULL;
@@ -137,7 +137,7 @@ bool rg_input_read_battery_raw(rg_battery_t *out)
     bool present = true;
     bool charging = false;
 
-#if defined(RG_TARGET_P4_GAME) && RG_BATTERY_DRIVER == 1 /* ADC - New API */
+#if (defined(RG_TARGET_P4_GAME) || defined(RG_TARGET_MAJULA)) && RG_BATTERY_DRIVER == 1 /* ADC - New API */
     if (!battery_adc_handle)
         return false;
     
@@ -418,7 +418,7 @@ void rg_input_init(void)
 #endif
 
 
-#if defined(RG_TARGET_P4_GAME) && RG_BATTERY_DRIVER == 1 /* ADC - New API */
+#if (defined(RG_TARGET_P4_GAME) || defined(RG_TARGET_MAJULA)) && RG_BATTERY_DRIVER == 1 /* ADC - New API */
     RG_LOGI("Initializing ADC battery driver (new API)...");
     // Initialize ADC oneshot unit
     adc_oneshot_unit_init_cfg_t init_config = {

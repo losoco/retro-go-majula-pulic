@@ -84,9 +84,9 @@ static const st7701_lcd_init_cmd_t st7701_init_cmds[] = {
     {0xED, (uint8_t []){0xFF, 0x04, 0x56, 0x7F, 0xBA, 0x2F, 0xFF, 0xFF, 0xFF, 0xFF, 0xF2, 0xAB, 0xF7, 0x65, 0x40, 0xFF}, 16, 0},
     {0xEF, (uint8_t []){0x08, 0x08, 0x08, 0x45, 0x3F, 0x54}, 6, 0},
     {0xFF, (uint8_t []){0x77, 0x01, 0x00, 0x00, 0x00}, 5, 0},
-   // {0x21, (uint8_t []){0x00}, 0, 0},
+    {0x3A, (uint8_t []){0x55}, 1, 0},
     {0x11, (uint8_t []){0x00}, 0, 120},
-    {0x29, (uint8_t []){0x00}, 0, 0},
+    {0x29, (uint8_t []){0x00}, 0, 20},
 };
 
 // 全局变量
@@ -286,11 +286,10 @@ static void lcd_init(void)
     
   
 #if FB_NUM == 2
-        ESP_ERROR_CHECK(esp_lcd_dpi_panel_get_frame_buffer(mipi_dpi_panel, 2, (void **)&fbs[0], (void **)&fbs[1])); 
+        ESP_ERROR_CHECK(esp_lcd_dpi_panel_get_frame_buffer(mipi_dpi_panel, 2, (void **)&fbs[0], (void **)&fbs[1]));
 #else
-        ESP_ERROR_CHECK(esp_lcd_dpi_panel_get_frame_buffer(mipi_dpi_panel, 1, (void **)&fbs[0])); 
+        ESP_ERROR_CHECK(esp_lcd_dpi_panel_get_frame_buffer(mipi_dpi_panel, 1, (void **)&fbs[0]));
 #endif
-
 
     RG_LOGI("ST7701 MIPI DSI LCD initialized successfully\n");
 }
