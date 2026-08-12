@@ -22,10 +22,23 @@ static struct {
     bool muted;
 } state;
 
+static void set_amp_enabled(bool enabled)
+{
+#if defined(RG_GPIO_SND_AMP_ENABLE)
+    gpio_set_direction(RG_GPIO_SND_AMP_ENABLE, GPIO_MODE_OUTPUT);
+#ifdef RG_GPIO_SND_AMP_ENABLE_INVERT
+    gpio_set_level(RG_GPIO_SND_AMP_ENABLE, enabled ? 0 : 1);
+#else
+    gpio_set_level(RG_GPIO_SND_AMP_ENABLE, enabled ? 1 : 0);
+#endif
+#endif
+}
+
 static bool driver_init(int device, int sample_rate)
 {
     state.last_error = NULL;
     state.device = device;
+    set_amp_enabled(false);
 
     if (state.device == 0)
     {
@@ -88,8 +101,12 @@ static bool driver_set_sample_rates(int sampleRate)
     return i2s_set_sample_rates(I2S_NUM_0, sampleRate) == ESP_OK;
 }
 
+static bool driver_set_mute(bool mute);
+
 static bool driver_deinit(void)
 {
+    driver_set_mute(true);
+    rg_task_delay(20);
     i2s_driver_uninstall(I2S_NUM_0);
     if (state.device == 0)
     {
@@ -178,15 +195,17 @@ static bool driver_submit(const rg_audio_frame_t *frames, size_t count)
 
 static bool driver_set_mute(bool mute)
 {
-    i2s_zero_dma_buffer(I2S_NUM_0);
-    #if defined(RG_GPIO_SND_AMP_ENABLE)
-        gpio_set_direction(RG_GPIO_SND_AMP_ENABLE, GPIO_MODE_OUTPUT);
-        #ifdef RG_GPIO_SND_AMP_ENABLE_INVERT
-            gpio_set_level(RG_GPIO_SND_AMP_ENABLE, mute ? 1 : 0);
-        #else
-            gpio_set_level(RG_GPIO_SND_AMP_ENABLE, mute ? 0 : 1);
-        #endif
-    #endif
+    if (mute)
+    {
+        set_amp_enabled(false);
+        i2s_zero_dma_buffer(I2S_NUM_0);
+    }
+    else
+    {
+        i2s_zero_dma_buffer(I2S_NUM_0);
+        rg_task_delay(20);
+        set_amp_enabled(true);
+    }
     state.muted = mute;
     return true;
 }
