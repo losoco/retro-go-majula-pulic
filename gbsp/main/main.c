@@ -46,12 +46,30 @@ static bool screenshot_handler(const char *filename, int width, int height)
 
 static bool save_state_handler(const char *filename)
 {
-    return false;
+    void *data = rg_alloc(GBA_STATE_MEM_SIZE, MEM_SLOW);
+    if (!data)
+        return false;
+
+    gba_save_state(data);
+    bool success = rg_storage_write_file(filename, data, GBA_STATE_MEM_SIZE, 0);
+    free(data);
+    return success;
 }
 
 static bool load_state_handler(const char *filename)
 {
-    return false;
+    void *data = rg_alloc(GBA_STATE_MEM_SIZE, MEM_SLOW);
+    size_t data_len = GBA_STATE_MEM_SIZE;
+    bool success = false;
+
+    if (!data)
+        return false;
+
+    if (rg_storage_read_file(filename, &data, &data_len, RG_FILE_USER_BUFFER) && data_len == GBA_STATE_MEM_SIZE)
+        success = gba_load_state(data);
+
+    free(data);
+    return success;
 }
 
 static bool reset_handler(bool hard)

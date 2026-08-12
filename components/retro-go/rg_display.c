@@ -860,6 +860,23 @@ void rg_display_write_rect(int left, int top, int width, int height, int stride,
 
 void rg_display_clear_rect(int left, int top, int width, int height, uint16_t color_le)
 {
+    if (left < 0)
+    {
+        width += left;
+        left = 0;
+    }
+    if (top < 0)
+    {
+        height += top;
+        top = 0;
+    }
+    if (left + width > display.screen.real_width)
+        width = display.screen.real_width - left;
+    if (top + height > display.screen.real_height)
+        height = display.screen.real_height - top;
+    if (width <= 0 || height <= 0)
+        return;
+
 #if RG_SCREEN_DRIVER == 2 
     rg_display_clear_rect_ppa(left,top, width, height,color_le);
 #else
