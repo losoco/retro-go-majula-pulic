@@ -573,13 +573,19 @@ void rg_gui_draw_icons(void)
 
     if (battery.present)
     {
-        right += 22;
+        char battery_text[8];
+        snprintf(battery_text, sizeof(battery_text), "%d%%", (int)battery.level);
+        rg_rect_t battery_label = rg_gui_draw_text(0, 0, 0, battery_text, C_SILVER, C_TRANSPARENT, RG_TEXT_DUMMY_DRAW | RG_TEXT_NO_PADDING);
+
+        right += 22 + battery_label.width + 3;
 
         int width = 16;
         int height = 10;
         int width_fill = width / 100.f * battery.level;
         int x_pos = -right;
         int y_pos = RG_MAX(0, (bar_height - height - 1) / 2);
+        int text_x = x_pos + width + 6;
+        int text_y = RG_MAX(0, (bar_height - battery_label.height) / 2);
 
         rg_color_t color_fill = (battery.level > 20 ? (battery.level > 40 ? C_FOREST_GREEN : C_ORANGE) : C_RED);
         rg_color_t color_border = C_SILVER;
@@ -589,6 +595,7 @@ void rg_gui_draw_icons(void)
         rg_gui_draw_rect(x_pos + width + 2, y_pos + 2, 2, height - 4, 1, color_border, C_NONE);
         rg_gui_draw_rect(x_pos + 1, y_pos + 1, width_fill, height - 2, 0, 0, color_fill);
         rg_gui_draw_rect(x_pos + 1 + width_fill, y_pos + 1, width - width_fill, height - 2, 0, 0, color_empty);
+        rg_gui_draw_text(text_x, text_y, battery_label.width, battery_text, C_SILVER, gui.screen_buffer ? C_TRANSPARENT : C_BLACK, RG_TEXT_NO_PADDING);
     }
 
     if (network.state > RG_NETWORK_DISCONNECTED)
