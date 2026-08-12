@@ -22,6 +22,18 @@
 #define RG_MIPI_DSI_DPI_CLK_MHZ       32    // DPI 时钟频率
 #endif
 
+#ifndef RG_MIPI_DSI_COLOR_FORMAT
+#define RG_MIPI_DSI_COLOR_FORMAT      LCD_COLOR_FMT_RGB565
+#endif
+
+#ifndef RG_MIPI_DSI_BITS_PER_PIXEL
+#define RG_MIPI_DSI_BITS_PER_PIXEL    16
+#endif
+
+#ifndef RG_ST7701_COLMOD
+#define RG_ST7701_COLMOD              0x55
+#endif
+
 // 时序参数 - 根据你的屏幕规格调整
 #ifndef RG_MIPI_DSI_LCD_HSYNC
 #define RG_MIPI_DSI_LCD_HSYNC         10
@@ -33,7 +45,7 @@
 #define RG_MIPI_DSI_LCD_HFP           20
 #endif
 #ifndef RG_MIPI_DSI_LCD_VSYNC
-#define RG_MIPI_DSI_LCD_VSYNC         10
+#define RG_MIPI_DSI_LCD_VSYNC         12
 #endif
 #ifndef RG_MIPI_DSI_LCD_VBP
 #define RG_MIPI_DSI_LCD_VBP           10
@@ -84,7 +96,7 @@ static const st7701_lcd_init_cmd_t st7701_init_cmds[] = {
     {0xED, (uint8_t []){0xFF, 0x04, 0x56, 0x7F, 0xBA, 0x2F, 0xFF, 0xFF, 0xFF, 0xFF, 0xF2, 0xAB, 0xF7, 0x65, 0x40, 0xFF}, 16, 0},
     {0xEF, (uint8_t []){0x08, 0x08, 0x08, 0x45, 0x3F, 0x54}, 6, 0},
     {0xFF, (uint8_t []){0x77, 0x01, 0x00, 0x00, 0x00}, 5, 0},
-    {0x3A, (uint8_t []){0x55}, 1, 0},
+    {0x3A, (uint8_t []){RG_ST7701_COLMOD}, 1, 0},
     {0x11, (uint8_t []){0x00}, 0, 120},
     {0x29, (uint8_t []){0x00}, 0, 20},
 };
@@ -214,7 +226,7 @@ static void lcd_init(void)
         .virtual_channel = 0,
         .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
         .dpi_clock_freq_mhz = RG_MIPI_DSI_DPI_CLK_MHZ,
-        .in_color_format = LCD_COLOR_FMT_RGB565,
+        .in_color_format = RG_MIPI_DSI_COLOR_FORMAT,
         .video_timing = {
             .h_size = 480,  // 物理屏幕宽度（固定）
             .v_size = 640,  // 物理屏幕高度（固定）
@@ -246,7 +258,7 @@ static void lcd_init(void)
         .reset_gpio_num = -1,
 #endif
         .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
-        .bits_per_pixel = 16,  // RGB565
+        .bits_per_pixel = RG_MIPI_DSI_BITS_PER_PIXEL,
         .vendor_config = &vendor_config,
     };
 

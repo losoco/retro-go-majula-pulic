@@ -25,6 +25,8 @@ gbsp_memory_t *gbsp_memory;
 
 static rg_surface_t *updates[2];
 static rg_surface_t *currentUpdate;
+static rg_surface_t *scaledUpdates[2];
+static int scaledUpdateIndex;
 static rg_app_t *app;
 
 static const char *SETTING_SOUND_EMULATION = "sound";
@@ -58,11 +60,57 @@ static bool reset_handler(bool hard)
     return true;
 }
 
+static void scale_gba_frame_640x480(const rg_surface_t *source, rg_surface_t *dest)
+{
+    if (source->width != GBA_SCREEN_WIDTH || source->height != GBA_SCREEN_HEIGHT ||
+        dest->width != RG_SCREEN_WIDTH || dest->height != RG_SCREEN_HEIGHT)
+    {
+        rg_surface_copy(source, NULL, dest, NULL, true);
+        return;
+    }
+
+    const uint16_t *src = source->data + source->offset;
+    uint16_t *dst = dest->data + dest->offset;
+
+    for (int y = 0; y < GBA_SCREEN_HEIGHT; y++)
+    {
+        const uint16_t *src_line = (const uint16_t *)((const uint8_t *)src + y * source->stride);
+        uint16_t *dst_line = (uint16_t *)((uint8_t *)dst + y * 3 * dest->stride);
+
+        uint16_t *out = dst_line;
+        for (int x = 0; x < GBA_SCREEN_WIDTH; x += 3)
+        {
+            uint16_t p0 = src_line[x + 0];
+            uint16_t p1 = src_line[x + 1];
+            uint16_t p2 = src_line[x + 2];
+
+            *out++ = p0;
+            *out++ = p0;
+            *out++ = p0;
+            *out++ = p1;
+            *out++ = p1;
+            *out++ = p1;
+            *out++ = p2;
+            *out++ = p2;
+        }
+
+        memcpy((uint8_t *)dst_line + dest->stride, dst_line, dest->stride);
+        memcpy((uint8_t *)dst_line + dest->stride * 2, dst_line, dest->stride);
+    }
+}
+
+static void submit_video(void)
+{
+    rg_surface_t *scaledUpdate = scaledUpdates[scaledUpdateIndex++ & 1];
+    scale_gba_frame_640x480(currentUpdate, scaledUpdate);
+    rg_display_submit(scaledUpdate, 0);
+}
+
 static void event_handler(int event, void *arg)
 {
     if (event == RG_EVENT_REDRAW)
     {
-        rg_display_submit(currentUpdate, 0);
+        submit_video();
     }
 }
 
@@ -127,6 +175,8 @@ void app_main(void)
     // updates[1] = rg_surface_create(GBA_SCREEN_WIDTH, GBA_SCREEN_HEIGHT + 1, RG_PIXEL_565_LE, MEM_FAST);
     // updates[1]->height = GBA_SCREEN_HEIGHT;
     currentUpdate = updates[0];
+    scaledUpdates[0] = rg_surface_create(RG_SCREEN_WIDTH, RG_SCREEN_HEIGHT, RG_PIXEL_565_LE, MEM_ANY);
+    scaledUpdates[1] = rg_surface_create(RG_SCREEN_WIDTH, RG_SCREEN_HEIGHT, RG_PIXEL_565_LE, MEM_ANY);
 
     gba_screen_pixels = currentUpdate->data;
 
@@ -178,7 +228,7 @@ void app_main(void)
         // RG_TIMER_LAP("execute_arm");
 
         if (!skip_next_frame)
-            rg_display_submit(currentUpdate, 0);
+            submit_video();
 
         size_t frames_count = sound_read_samples((s16 *)mixbuffer, AUDIO_BUFFER_LENGTH);
         // RG_TIMER_LAP("sound_read_samples");

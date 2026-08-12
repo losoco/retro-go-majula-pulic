@@ -576,10 +576,10 @@ void rg_gui_draw_icons(void)
         right += 22;
 
         int width = 16;
-        int height = icon_height;
+        int height = 10;
         int width_fill = width / 100.f * battery.level;
         int x_pos = -right;
-        int y_pos = icon_top;
+        int y_pos = RG_MAX(0, (bar_height - height - 1) / 2);
 
         rg_color_t color_fill = (battery.level > 20 ? (battery.level > 40 ? C_FOREST_GREEN : C_ORANGE) : C_RED);
         rg_color_t color_border = C_SILVER;

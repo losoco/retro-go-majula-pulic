@@ -411,7 +411,7 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, void *_u
         .frameTime = 1000000 / 60,
         .frameskip = 1, // This can be overriden on a per-app basis if needed, do not set 0 here!
         .overclock_level = 0,
-        .overclock_mhz = 240,
+        .overclock_mhz = RG_DEFAULT_CPU_FREQ_MHZ,
         .lowMemoryMode = false,
         .enWatchdog = true,
         .isColdBoot = true,
@@ -499,7 +499,7 @@ rg_app_t *rg_system_init(int sampleRate, const rg_handlers_t *handlers, void *_u
     rg_gui_draw_hourglass();
     rg_audio_init(sampleRate);
 
-    rg_system_set_timezone(rg_settings_get_string(NS_GLOBAL, SETTING_TIMEZONE, "EST+5"));
+    rg_system_set_timezone(rg_settings_get_string(NS_GLOBAL, SETTING_TIMEZONE, RG_TIMEZONE_DEFAULT));
     rg_system_load_time();
 
     // Do these last to not interfere with panic handling above

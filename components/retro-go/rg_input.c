@@ -1,5 +1,6 @@
 #include "rg_system.h"
 #include "rg_input.h"
+#include "rg_audio.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -301,6 +302,9 @@ static void input_task(void *arg)
     uint32_t local_gamepad_state = 0;
     uint32_t state;
     int64_t next_battery_update = 0;
+#if defined(RG_GPIO_VOL_UP) || defined(RG_GPIO_VOL_DOWN)
+    int64_t next_volume_update = 0;
+#endif
 
     // Start the task with debounce history full to allow a button held during boot to be detected
     memset(debounce, 0xFF, sizeof(debounce));
@@ -326,6 +330,24 @@ static void input_task(void *arg)
             }
             gamepad_state = local_gamepad_state;
         }
+
+#if defined(RG_GPIO_VOL_UP) || defined(RG_GPIO_VOL_DOWN)
+        if (rg_system_timer() >= next_volume_update)
+        {
+            int volume_delta = 0;
+#ifdef RG_GPIO_VOL_UP
+            volume_delta += gpio_get_level(RG_GPIO_VOL_UP) == 0 ? 5 : 0;
+#endif
+#ifdef RG_GPIO_VOL_DOWN
+            volume_delta -= gpio_get_level(RG_GPIO_VOL_DOWN) == 0 ? 5 : 0;
+#endif
+            if (volume_delta)
+            {
+                rg_audio_set_volume(rg_audio_get_volume() + volume_delta);
+                next_volume_update = rg_system_timer() + 150000;
+            }
+        }
+#endif
 
         if (rg_system_timer() >= next_battery_update)
         {
@@ -382,6 +404,15 @@ void rg_input_init(void)
             gpio_set_pull_mode(mapping->num, GPIO_FLOATING);
     }
     UPDATE_GLOBAL_MAP(keymap_gpio);
+#endif
+
+#ifdef RG_GPIO_VOL_UP
+    gpio_set_direction(RG_GPIO_VOL_UP, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(RG_GPIO_VOL_UP, GPIO_PULLUP_ONLY);
+#endif
+#ifdef RG_GPIO_VOL_DOWN
+    gpio_set_direction(RG_GPIO_VOL_DOWN, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(RG_GPIO_VOL_DOWN, GPIO_PULLUP_ONLY);
 #endif
 
 #if defined(RG_GAMEPAD_I2C_MAP)

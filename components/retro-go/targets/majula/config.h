@@ -58,11 +58,20 @@
 #define RG_SCREEN_VISIBLE_AREA      {0, 0, 0, 0}  // Left, Top, Right, Bottom
 #define RG_SCREEN_SAFE_AREA         {0, 0, 0, 0}  // Left, Top, Right, Bottom
 #define RG_SCREEN_PARTIAL_UPDATES   1
+#define RG_LANG_DEFAULT             RG_LANG_ZH
+#define RG_FONT_DEFAULT             RG_FONT_SANS_20
+#define RG_TIMEZONE_DEFAULT         "CST-8"
+#define RG_DEFAULT_CPU_FREQ_MHZ     360
+#define RG_DISPLAY_SCALING_DEFAULT  RG_DISPLAY_SCALING_FULL
 
 #define RG_GPIO_LCD_RST             GPIO_NUM_23
 #define RG_GPIO_LCD_BCKL            GPIO_NUM_5
+#define RG_GPIO_LCD_BCKL_INVERT
 #define RG_MIPI_DSI_LANE_BITRATE_MBPS 480
-#define RG_MIPI_DSI_DPI_CLK_MHZ       16
+#define RG_MIPI_DSI_DPI_CLK_MHZ       21
+#define RG_MIPI_DSI_COLOR_FORMAT      LCD_COLOR_FMT_RGB565
+#define RG_MIPI_DSI_BITS_PER_PIXEL    16
+#define RG_ST7701_COLMOD              0x55
 
 
 /****************************************************************************
@@ -84,8 +93,9 @@
     {RG_KEY_Y,      .num = GPIO_NUM_11, .pullup = 1, .level = 0},\
     {RG_KEY_L,      .num = GPIO_NUM_1,  .pullup = 1, .level = 0},\
     {RG_KEY_R,      .num = GPIO_NUM_0,  .pullup = 1, .level = 0},\
-    /* GPIO34 = VOL+, GPIO35 = VOL-/BOOT (not mapped to gamepad keys) */\
 }
+#define RG_GPIO_VOL_UP              GPIO_NUM_34
+#define RG_GPIO_VOL_DOWN            GPIO_NUM_35
 
 
 /****************************************************************************
