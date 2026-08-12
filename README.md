@@ -1,4 +1,4 @@
-![Majula复古游戏掌机](https://image.lceda.cn/oshwhub/pullImage/bbbe9112c09840358b885b8a9fcd5b18.png)
+![Majula复古游戏掌机](docs/images/readme-01-7cdb25a4.png)
 
 **申明本仓库非原作者，为复刻爱好者基于Bardo 大佬的工程，适配了软件。和原作者软件并不相同！！！**
 
@@ -38,15 +38,15 @@ Majula复古游戏掌机
 7. 双喇叭
 8. 更大的电池
 
-![](https://image.lceda.cn/oshwhub/pullImage/198a50eb93104064898818d7cb87b2d1.jpg)
+![](docs/images/readme-02-e291a189.jpg)
 
-![](https://image.lceda.cn/oshwhub/pullImage/7ea693cdd66440a29153f2b1ee2f6173.jpg)
+![](docs/images/readme-03-9e727f0a.jpg)
 
-![](https://image.lceda.cn/oshwhub/pullImage/b4449020f31246eabdebce1ad0d75e37.png)
+![](docs/images/readme-04-8a034603.png)
 
-![](https://image.lceda.cn/oshwhub/pullImage/59454de310994da388bab17d36611453.png)
+![](docs/images/readme-05-e65c730e.png)
 
-![](https://image.lceda.cn/oshwhub/pullImage/a9f5a8eac178493bb3b15a2d1d3cf605.jpg)
+![](docs/images/readme-06-e324ef96.jpg)
 
 ## 外观上：
 
@@ -56,9 +56,9 @@ Majula复古游戏掌机
 4. 立创定制面板，让外观更精致
 5. 3D打印的外壳，就这个拉跨，可它便宜啊！
 
-![](https://image.lceda.cn/oshwhub/pullImage/98be53d1a9344616a4014c0965f0592a.jpg)
+![](docs/images/readme-07-403bf7e6.jpg)
 
-![](https://image.lceda.cn/oshwhub/pullImage/02dd582414a24c598b9a71a3b6a25dce.jpg)
+![](docs/images/readme-08-c0e5dff7.jpg)
 
 ## 设计图
 
@@ -66,6 +66,6 @@ V2.1
 
 原理图
 
-![img](https://image-pro.lceda.cn/projects/thumbs/2b99713c8f3d47cbbaa745d06f72fa2b.webp)
+![img](docs/images/readme-09-2dd01e58.webp)
 
-![](https://image-pro.lceda.cn/projects/thumbs/6df6811630964c3f95eb4d232a0636ba.webp)
+![](docs/images/readme-10-6c4fd69d.webp)
