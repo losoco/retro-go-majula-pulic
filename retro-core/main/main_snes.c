@@ -3,7 +3,7 @@
 #include <snes9x.h>
 #include <math.h>
 
-// #define FRAME_DOUBLE_BUFFERING
+#define FRAME_DOUBLE_BUFFERING
 // #define AUDIO_DOUBLE_BUFFERING
 #define USE_AUDIO_TASK
 
@@ -59,6 +59,8 @@ static const char *SNES_BUTTONS[] = {
 static rg_app_t *app;
 static rg_surface_t *updates[2];
 static rg_surface_t *currentUpdate;
+static rg_surface_t *scaledUpdates[2];
+static int scaledUpdateIndex;
 static rg_audio_sample_t *audioBuffers[2];
 static rg_audio_sample_t *currentAudioBuffer;
 
@@ -333,6 +335,9 @@ void snes_main(void)
 #endif
     currentUpdate = updates[0];
 
+    scaledUpdates[0] = rg_surface_create(RG_SCREEN_WIDTH, RG_SCREEN_HEIGHT, RG_PIXEL_565_LE, MEM_ANY);
+    scaledUpdates[1] = rg_surface_create(RG_SCREEN_WIDTH, RG_SCREEN_HEIGHT, RG_PIXEL_565_LE, MEM_ANY);
+
 #ifdef AUDIO_DOUBLE_BUFFERING
     audioBuffers[0] = (rg_audio_sample_t *)calloc(AUDIO_BUFFER_LENGTH, 4);
     audioBuffers[1] = (rg_audio_sample_t *)calloc(AUDIO_BUFFER_LENGTH, 4);
@@ -447,7 +452,9 @@ void snes_main(void)
         if (drawFrame)
         {
             slowFrame = !rg_display_sync(false);
-            rg_display_submit(currentUpdate, 0);
+            rg_surface_t *scaledUpdate = scaledUpdates[scaledUpdateIndex++ & 1];
+            rg_surface_copy(currentUpdate, NULL, scaledUpdate, NULL, true);
+            rg_display_submit(scaledUpdate, 0);
             currentUpdate = updates[currentUpdate == updates[0]];
         }
 
