@@ -8,6 +8,7 @@ static int palette = 0;
 static bool slowFrame = false;
 static bool nsfPlayer = false;
 static nes_t *nes;
+static int turboCounter;
 
 static rg_app_t *app;
 static rg_surface_t *updates[2];
@@ -283,6 +284,12 @@ void nes_main(void)
         if (joystick & RG_KEY_LEFT)   buttons |= NES_PAD_LEFT;
         if (joystick & RG_KEY_A)      buttons |= NES_PAD_A;
         if (joystick & RG_KEY_B)      buttons |= NES_PAD_B;
+        if ((turboCounter & 3) != 3)
+        {
+            if (joystick & RG_KEY_X)  buttons |= NES_PAD_A;
+            if (joystick & RG_KEY_Y)  buttons |= NES_PAD_B;
+        }
+        turboCounter++;
 
         if (drawFrame)
         {
