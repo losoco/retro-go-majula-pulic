@@ -59,6 +59,7 @@ static const char *SNES_BUTTONS[] = {
 static rg_app_t *app;
 static rg_surface_t *updates[2];
 static rg_surface_t *currentUpdate;
+static rg_surface_t *displayUpdate;
 static rg_surface_t *scaledUpdates[2];
 static int scaledUpdateIndex;
 static rg_audio_sample_t *audioBuffers[2];
@@ -71,8 +72,12 @@ static rg_task_t *audio_task_handle;
 static bool sound_enabled = true;
 static bool lowpass_filter = false;
 
-static void scale_snes_frame(rg_surface_t *source, rg_surface_t *dest)
+static rg_surface_t *get_display_update(rg_surface_t *source)
 {
+    if (rg_display_get_scaling() != RG_DISPLAY_SCALING_FULL)
+        return source;
+
+    rg_surface_t *dest = scaledUpdates[scaledUpdateIndex++ & 1];
     const uint16_t *src_base = (const uint16_t *)source->data;
     uint16_t *dst = (uint16_t *)dest->data;
     uint16_t line[RG_SCREEN_WIDTH];
@@ -100,6 +105,8 @@ static void scale_snes_frame(rg_surface_t *source, rg_surface_t *dest)
             dst += RG_SCREEN_WIDTH;
         }
     }
+
+    return dest;
 }
 
 static int keymap_id = 0;
@@ -141,9 +148,9 @@ static bool reset_handler(bool hard)
 
 static void event_handler(int event, void *arg)
 {
-    if (event == RG_EVENT_REDRAW)
+    if (event == RG_EVENT_REDRAW && displayUpdate)
     {
-        rg_display_submit(currentUpdate, 0);
+        rg_display_submit(displayUpdate, 0);
     }
 }
 
@@ -483,9 +490,8 @@ void snes_main(void)
         if (drawFrame)
         {
             slowFrame = !rg_display_sync(false);
-            rg_surface_t *scaledUpdate = scaledUpdates[scaledUpdateIndex++ & 1];
-            scale_snes_frame(currentUpdate, scaledUpdate);
-            rg_display_submit(scaledUpdate, 0);
+            displayUpdate = get_display_update(currentUpdate);
+            rg_display_submit(displayUpdate, 0);
             currentUpdate = updates[currentUpdate == updates[0]];
         }
 
