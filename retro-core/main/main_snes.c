@@ -71,6 +71,37 @@ static rg_task_t *audio_task_handle;
 static bool sound_enabled = true;
 static bool lowpass_filter = false;
 
+static void scale_snes_frame(rg_surface_t *source, rg_surface_t *dest)
+{
+    const uint16_t *src_base = (const uint16_t *)source->data;
+    uint16_t *dst = (uint16_t *)dest->data;
+    uint16_t line[RG_SCREEN_WIDTH];
+
+    for (int y = 0; y < SNES_HEIGHT; ++y)
+    {
+        const uint16_t *src = src_base + y * SNES_WIDTH;
+        uint16_t *p = line;
+
+        for (int x = 0; x < SNES_WIDTH; x += 2)
+        {
+            uint16_t a = src[x];
+            uint16_t b = src[x + 1];
+            *p++ = a;
+            *p++ = a;
+            *p++ = b;
+            *p++ = b;
+            *p++ = b;
+        }
+
+        int repeats = (y % 7 == 0) ? 3 : 2;
+        for (int r = 0; r < repeats; ++r)
+        {
+            memcpy(dst, line, RG_SCREEN_WIDTH * sizeof(uint16_t));
+            dst += RG_SCREEN_WIDTH;
+        }
+    }
+}
+
 static int keymap_id = 0;
 static keymap_t keymap;
 
@@ -402,7 +433,7 @@ void snes_main(void)
     }
 
     rg_system_set_tick_rate(Memory.ROMFramesPerSecond);
-    app->frameskip = 3;
+    app->frameskip = 0;
 
     bool menuCancelled = false;
     bool menuPressed = false;
@@ -453,7 +484,7 @@ void snes_main(void)
         {
             slowFrame = !rg_display_sync(false);
             rg_surface_t *scaledUpdate = scaledUpdates[scaledUpdateIndex++ & 1];
-            rg_surface_copy(currentUpdate, NULL, scaledUpdate, NULL, true);
+            scale_snes_frame(currentUpdate, scaledUpdate);
             rg_display_submit(scaledUpdate, 0);
             currentUpdate = updates[currentUpdate == updates[0]];
         }
