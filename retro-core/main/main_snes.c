@@ -79,6 +79,125 @@ static const char *SETTING_SOUND_EMULATION = "apu";
 static const char *SETTING_SOUND_FILTER = "filter";
 // --- MAIN
 
+
+static void snes_scale_rgb565_nearest(const rg_surface_t *source, rg_surface_t *dest, const rg_rect_t *dest_rect)
+{
+    static int16_t x_map[RG_SCREEN_WIDTH];
+    static int cached_src_width;
+    static int cached_dest_width;
+
+    const int src_width = source->width;
+    const int src_height = source->height;
+    const int dst_left = dest_rect->left;
+    const int dst_top = dest_rect->top;
+    const int dst_width = dest_rect->width;
+    const int dst_height = dest_rect->height;
+    const int dst_right = dst_left + dst_width;
+    const int dst_bottom = dst_top + dst_height;
+    const size_t row_bytes = dest->width * sizeof(uint16_t);
+
+    if (cached_src_width != src_width || cached_dest_width != dst_width)
+    {
+        for (int x = 0; x < dst_width; x++)
+            x_map[x] = (x * src_width) / dst_width;
+        cached_src_width = src_width;
+        cached_dest_width = dst_width;
+    }
+
+    int last_src_y = -1;
+    uint16_t *last_dst = NULL;
+
+    for (int y = 0; y < dest->height; y++)
+    {
+        uint16_t *dst = (uint16_t *)(dest->data + dest->offset + y * dest->stride);
+
+        if (y < dst_top || y >= dst_bottom)
+        {
+            memset(dst, 0, row_bytes);
+            last_src_y = -1;
+            last_dst = NULL;
+            continue;
+        }
+
+        const int src_y = ((y - dst_top) * src_height) / dst_height;
+
+        if (src_y == last_src_y && last_dst)
+        {
+            memcpy(dst, last_dst, row_bytes);
+            continue;
+        }
+
+        if (dst_left > 0)
+            memset(dst, 0, dst_left * sizeof(uint16_t));
+        if (dst_right < dest->width)
+            memset(dst + dst_right, 0, (dest->width - dst_right) * sizeof(uint16_t));
+
+        const uint16_t *src = (const uint16_t *)(source->data + source->offset + src_y * source->stride);
+        uint16_t *out = dst + dst_left;
+
+        for (int x = 0; x < dst_width; x++)
+            out[x] = src[x_map[x]];
+
+        last_src_y = src_y;
+        last_dst = dst;
+    }
+}
+
+static void snes_prepare_display_surface(const rg_surface_t *source, rg_surface_t *dest)
+{
+    int width = source->width;
+    int height = source->height;
+
+    switch (rg_display_get_scaling())
+    {
+        case RG_DISPLAY_SCALING_FULL:
+            width = RG_SCREEN_WIDTH;
+            height = RG_SCREEN_HEIGHT;
+            break;
+
+        case RG_DISPLAY_SCALING_FIT:
+        {
+            width = RG_SCREEN_HEIGHT * source->width / source->height;
+            height = RG_SCREEN_HEIGHT;
+            if (width > RG_SCREEN_WIDTH)
+            {
+                width = RG_SCREEN_WIDTH;
+                height = RG_SCREEN_WIDTH * source->height / source->width;
+            }
+            break;
+        }
+
+        case RG_DISPLAY_SCALING_ZOOM:
+            width = source->width * rg_display_get_custom_zoom();
+            height = source->height * rg_display_get_custom_zoom();
+            width = RG_MIN(RG_SCREEN_WIDTH, RG_MAX(1, width));
+            height = RG_MIN(RG_SCREEN_HEIGHT, RG_MAX(1, height));
+            break;
+
+        case RG_DISPLAY_SCALING_OFF:
+        default:
+            break;
+    }
+
+    width &= ~1;
+    height &= ~1;
+
+    rg_rect_t dest_rect = {
+        .left = (RG_SCREEN_WIDTH - width) / 2,
+        .top = (RG_SCREEN_HEIGHT - height) / 2,
+        .width = width,
+        .height = height,
+    };
+
+    if (source->format == RG_PIXEL_565_LE && dest->format == RG_PIXEL_565_LE)
+        snes_scale_rgb565_nearest(source, dest, &dest_rect);
+    else
+    {
+        rg_surface_fill(dest, NULL, 0);
+        rg_surface_copy(source, NULL, dest, &dest_rect, true);
+    }
+}
+
 static void update_keymap(int id)
 {
     keymap_id = id % KEYMAPS_COUNT;
@@ -453,7 +572,7 @@ void snes_main(void)
         {
             slowFrame = !rg_display_sync(false);
             rg_surface_t *scaledUpdate = scaledUpdates[scaledUpdateIndex++ & 1];
-            rg_surface_copy(currentUpdate, NULL, scaledUpdate, NULL, true);
+            snes_prepare_display_surface(currentUpdate, scaledUpdate);
             rg_display_submit(scaledUpdate, 0);
             currentUpdate = updates[currentUpdate == updates[0]];
         }
