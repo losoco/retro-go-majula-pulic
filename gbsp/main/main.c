@@ -119,6 +119,15 @@ static void scale_gba_frame_640x480(const rg_surface_t *source, rg_surface_t *de
 
 static void submit_video(void)
 {
+    // 参考 snes：非 FULL 缩放模式下直接提交原始分辨率，由 rg_display
+    // 按 viewport/scaling 处理（OFF/FIT/ZOOM 才能生效）；
+    // 仅 FULL 模式用 CPU 预缩放为 640x480，避免 PPA 非整数缩放+旋转的偏移问题。
+    if (rg_display_get_scaling() != RG_DISPLAY_SCALING_FULL)
+    {
+        rg_display_submit(currentUpdate, 0);
+        return;
+    }
+
     rg_surface_t *scaledUpdate = scaledUpdates[scaledUpdateIndex++ & 1];
     scale_gba_frame_640x480(currentUpdate, scaledUpdate);
     rg_display_submit(scaledUpdate, 0);

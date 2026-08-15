@@ -425,6 +425,15 @@ static void update_viewport_scaling(void)
     {
         new_width = FLOAT_TO_INT(src_width * config.custom_zoom);
         new_height = FLOAT_TO_INT(src_height * config.custom_zoom);
+
+        // 防止 viewport 超出屏幕：PPA 无法处理超出输出图的 viewport
+        // （"scale does not fit in the out pic"），会导致 panic 重启。
+        if (new_width > screen_width || new_height > screen_height)
+        {
+            float fit = RG_MIN((float)screen_width / new_width, (float)screen_height / new_height);
+            new_width = FLOAT_TO_INT(new_width * fit);
+            new_height = FLOAT_TO_INT(new_height * fit);
+        }
     }
 
     // Everything works better when we use even dimensions!

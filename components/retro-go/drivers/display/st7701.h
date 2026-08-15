@@ -7,6 +7,7 @@
 #include <esp_lcd_mipi_dsi.h>
 #include <esp_lcd_st7701.h>
 #include <esp_ldo_regulator.h>
+#include <esp_cache.h>
 #include "driver/ppa.h"
 
 // MIPI DSI 配置 - 根据你的硬件调整这些参数
@@ -401,8 +402,13 @@ static void s_srm_ops_fit(void *in_buf, void *out_buf, size_t buf_size,
                           float scale,
                           int out_left, int out_top)
 {
-    
-    //memset(out_buf, 0, buf_size);
+    // 清空输出缓冲：PPA 只写 viewport 区域，黑框（viewport 之外）必须为纯黑，
+    // 否则会残留上一帧内容导致闪烁。随后 invalidate cache，使 cache 与内存
+    // 同步（丢弃 memset 产生的脏行），保证 PPA（DMA）写入的结果不被后续
+    // cache 回写覆盖。
+    memset(out_buf, 0, buf_size);
+    esp_cache_msync(out_buf, buf_size, ESP_CACHE_MSYNC_FLAG_DIR_M2C);
+
     // PPA 会根据输入输出尺寸自动计算缩放比例
     // 旋转90度：输出w对应输入h，输出h对应输入w
     ppa_srm_oper_config_t srm_config = {
